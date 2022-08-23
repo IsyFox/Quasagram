@@ -16,6 +16,7 @@
       <q-btn
         v-if="hasCameraSupport"
         @click="captureImage"
+        :disable="imageCaptured"
         v-model="post.caption"
         color="grey-10"
         icon="eva-camera"
@@ -37,8 +38,9 @@
         </q-file>
       <div class="row justify-center q-ma-md">
         <q-input
+          v-model="post.caption"
           class="col"
-          label="Título"
+          label="Título *"
           dense />
       </div>
       <div class="row justify-center q-ma-md">
@@ -63,6 +65,8 @@
       </div>
       <div class="row justify-center q-mt-lg">
         <q-btn
+          @click="addPost()"
+          :disable="!post.caption || !post.location"
           unelevated
           rounded
           color="primary"
@@ -196,6 +200,32 @@ export default {
       var blob = new Blob([ab], {type: mimeString});
       return blob;
 
+    },
+    addPost() {
+      let formData = new FormData()
+      formData.append('id', this.post.id)
+      formData.append('caption', this.post.caption)
+      formData.append('location', this.post.location)
+      formData.append('date', this.post.date)
+      formData.append('file', this.post.photo, this.post.id + '.png')
+
+      this.$axios.post(`${ process.env.API }/createPost`, formData).then(response => {
+        console.log(response)
+        this.$router.push('/')
+        this.$q.notify({
+          message: 'Publicação realizada com sucesso',
+          actions: [
+            { label: 'Fechar', color: 'white' }
+
+          ]
+        })
+      }).catch(error => {
+        console.log('Erro: ' + error)
+        this.$q.dialog({
+          title: 'Erro',
+          message: 'Ocorreu um erro ao publicar seu post, tente novamente mais tarde',
+        })
+      })
     }
   },
   mounted() {
